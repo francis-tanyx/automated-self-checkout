@@ -11,9 +11,29 @@ TARGET_FPS ?= 14.95
 DOCKER_COMPOSE ?= docker-compose.yml
 RESULTS_DIR ?= $(PWD)/results
 RETAIL_USE_CASE_ROOT ?= $(PWD)
+yolov ?= yolov5
 
+ifeq ($(yolov),yolov8)
+download-models: download-yolov8s
+	bash ./download_models/downloadModels.sh
+else
 download-models:
-	./download_models/downloadModels.sh
+	bash ./download_models/downloadModels.sh
+endif
+
+download-yolov8s:
+	@if [ ! -d "$(PWD)/models/object_detection/yolov8s/" ]; then \
+		echo "The yolov8s folder doesn't exist. Creating it and downloading the model..."; \
+		mkdir -p $(PWD)/models/object_detection/yolov8s/; \
+		docker run --user 1000:1000 -e HTTPS_PROXY=${HTTPS_PROXY} -e HTTP_PROXY=${HTTPS_PROXY} --rm \
+			-e YOLO_DEBUG=1 \
+			-v $(PWD)/models/object_detection/yolov8s:/models \
+			ultralytics/ultralytics:8.2.101-cpu \
+			bash -c "cd /models && yolo export model=yolov8s.pt format=openvino"; \
+		mv $(PWD)/models/object_detection/yolov8s/yolov8s_openvino_model $(PWD)/models/object_detection/yolov8s/FP32; \
+	else \
+		echo "yolov8s already exists."; \
+	fi
 
 download-sample-videos:
 	cd performance-tools/benchmark-scripts && ./download_sample_videos.sh
@@ -21,9 +41,11 @@ download-sample-videos:
 clean-models:
 	@find ./models/ -mindepth 1 -maxdepth 1 -type d -exec sudo rm -r {} \;
 
+
+
 run-smoke-tests: | download-models update-submodules download-sample-videos
-	@echo "Running smoke tests for OVMS profiles"
-	@./smoke_test.sh > smoke_tests_output.log
+	@echo "Running smoke tests for OVMS profiles with $(yolov)"
+	@bash ./smoke_test.sh $(yolov) > smoke_tests_output.log
 	@echo "results of smoke tests recorded in the file smoke_tests_output.log"
 	@grep "Failed" ./smoke_tests_output.log || true
 	@grep "===" ./smoke_tests_output.log || true

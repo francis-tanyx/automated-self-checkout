@@ -89,9 +89,11 @@ waitForLogFile
 verifyNonEmptyPipelineLog
 teardown
 
+MODEL=${1:-yolov5}
+
 # 3. Automated Self Checkout GPU results: should see non-empty pipeline0.log contents
-echo "Running Automated Self Checkout GPU with logs..."
-make run DEVICE_ENV=res/yolov5-gpu.env DEVICE=GPU
+echo "Running Automated Self Checkout GPU using ${MODEL} with logs..."
+make run DEVICE_ENV=res/${MODEL}-gpu.env DEVICE=GPU
 status_code=$?
 verifyStatusCode $status_code 
 # allowing some time to process
