@@ -93,7 +93,27 @@ MODEL=${1:-yolov5}
 
 # 3. Automated Self Checkout GPU results: should see non-empty pipeline0.log contents
 echo "Running Automated Self Checkout GPU using ${MODEL} with logs..."
-make run DEVICE_ENV=res/${MODEL}-gpu.env DEVICE=GPU
+make run DEVICE_ENV=res/all-gpu.env DEVICE=GPU
+status_code=$?
+verifyStatusCode $status_code 
+# allowing some time to process
+waitForLogFile
+verifyNonEmptyPipelineLog
+teardown
+
+# 4. Yolov8s pipeine: should see non-empty pipeline0.log contents
+echo "Running YOLOv8s pipeline with logs..."
+INPUTSRC=https://github.com/intel-iot-devkit/sample-videos/raw/master/people-detection.mp4 PIPELINE_SCRIPT=yolov8s_roi.sh docker compose -f src/docker-compose.yml up -d
+status_code=$?
+verifyStatusCode $status_code 
+# allowing some time to process
+waitForLogFile
+verifyNonEmptyPipelineLog
+teardown
+
+# 5. Age pipeline: should see non-empty pipeline0.log contents
+echo "Running Age Classification pipeline with logs..."
+INPUTSRC=https://www.pexels.com/download/video/3248275 PIPELINE_SCRIPT=age_recognition.sh docker compose -f src/docker-compose.yml up -d
 status_code=$?
 verifyStatusCode $status_code 
 # allowing some time to process
