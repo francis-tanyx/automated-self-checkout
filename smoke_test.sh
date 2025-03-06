@@ -89,7 +89,7 @@ waitForLogFile
 verifyNonEmptyPipelineLog
 teardown
 
-MODEL=${1:-yolov8}
+MODEL=${1:-yolov5}
 
 # 3. Automated Self Checkout GPU results: should see non-empty pipeline0.log contents
 echo "Running Automated Self Checkout GPU using ${MODEL} with logs..."
