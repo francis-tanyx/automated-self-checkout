@@ -7,11 +7,16 @@
 
 MKDOCS_IMAGE ?= asc-mkdocs
 PIPELINE_COUNT ?= 1
+yolov ?= yolov5
 TARGET_FPS ?= 14.95
-DOCKER_COMPOSE ?= docker-compose.yml
+ifeq ($(yolov),yolov8)
+	DOCKER_COMPOSE ?= docker-compose-yolov8s.yml
+else
+	DOCKER_COMPOSE ?= docker-compose.yml
+endif
 RESULTS_DIR ?= $(PWD)/results
 RETAIL_USE_CASE_ROOT ?= $(PWD)
-yolov ?= yolov5
+
 
 ifeq ($(yolov),yolov8)
 download-models: download-yolov8s
