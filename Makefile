@@ -9,13 +9,15 @@ MKDOCS_IMAGE ?= asc-mkdocs
 PIPELINE_COUNT ?= 1
 YOLO ?= yolov5
 TARGET_FPS ?= 14.95
-ifeq ($(YOLO),yolov8)
-	DOCKER_COMPOSE ?= docker-compose-yolov8s.yml
-else
-	DOCKER_COMPOSE ?= docker-compose.yml
-endif
+DOCKER_COMPOSE ?= docker-compose.yml
 RESULTS_DIR ?= $(PWD)/results
 RETAIL_USE_CASE_ROOT ?= $(PWD)
+
+ifeq ($(YOLO),yolov8)
+	PIPELINE_SCRIPT ?= ""
+else
+	PIPELINE_SCRIPT ?= yolov8s_roi.sh
+endif
 
 
 ifeq ($(YOLO),yolov8)
@@ -69,14 +71,14 @@ build-pipeline-server: | download-models update-submodules download-sample-video
 	docker build -t dlstreamer:pipeline-server -f src/pipeline-server/Dockerfile.pipeline-server src/pipeline-server
 
 run:
-	docker compose -f src/$(DOCKER_COMPOSE) up -d
+	PIPELINE_SCRIPT=$(PIPELINE_SCRIPT) docker compose -f src/$(DOCKER_COMPOSE) up -d
 
 run-render-mode:
 	xhost +local:docker
-	RENDER_MODE=1 docker compose -f src/$(DOCKER_COMPOSE) up -d
+	RENDER_MODE=1 PIPELINE_SCRIPT=$(PIPELINE_SCRIPT) docker compose -f src/$(DOCKER_COMPOSE) up -d
 
 down:
-	docker compose -f src/$(DOCKER_COMPOSE) down
+	PIPELINE_SCRIPT=$(PIPELINE_SCRIPT) docker compose -f src/$(DOCKER_COMPOSE) down
 
 run-demo: | download-models update-submodules download-sample-videos
 	@echo "Building automated self checkout app"	
@@ -116,10 +118,10 @@ clean-telegraf:
 	./clean-containers.sh telegraf
 
 run-portainer:
-	docker compose -p portainer -f docker-compose-portainer.yml up -d
+	PIPELINE_SCRIPT=$(PIPELINE_SCRIPT) docker compose -p portainer -f docker-compose-portainer.yml up -d
 
 down-portainer:
-	docker compose -p portainer -f docker-compose-portainer.yml down
+	PIPELINE_SCRIPT=$(PIPELINE_SCRIPT) docker compose -p portainer -f docker-compose-portainer.yml down
 
 clean-results:
 	rm -rf results/*
