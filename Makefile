@@ -7,9 +7,9 @@
 
 MKDOCS_IMAGE ?= asc-mkdocs
 PIPELINE_COUNT ?= 1
-yolov ?= yolov5
+YOLO ?= yolov5
 TARGET_FPS ?= 14.95
-ifeq ($(yolov),yolov8)
+ifeq ($(YOLO),yolov8)
 	DOCKER_COMPOSE ?= docker-compose-yolov8s.yml
 else
 	DOCKER_COMPOSE ?= docker-compose.yml
@@ -18,7 +18,7 @@ RESULTS_DIR ?= $(PWD)/results
 RETAIL_USE_CASE_ROOT ?= $(PWD)
 
 
-ifeq ($(yolov),yolov8)
+ifeq ($(YOLO),yolov8)
 download-models: download-yolov8s
 	bash ./download_models/downloadModels.sh
 else
@@ -49,8 +49,8 @@ clean-models:
 
 
 run-smoke-tests: | download-models update-submodules download-sample-videos
-	@echo "Running smoke tests for OVMS profiles with $(yolov)"
-	@bash ./smoke_test.sh $(yolov) > smoke_tests_output.log
+	@echo "Running smoke tests for OVMS profiles with $(YOLO)"
+	@bash ./smoke_test.sh $(YOLO) > smoke_tests_output.log
 	@echo "results of smoke tests recorded in the file smoke_tests_output.log"
 	@grep "Failed" ./smoke_tests_output.log || true
 	@grep "===" ./smoke_tests_output.log || true
